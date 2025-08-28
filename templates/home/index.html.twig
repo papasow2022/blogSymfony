@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        {% if query or category %}
+            <h1 class="display-4 fw-bold mb-3">Résultats de recherche</h1>
+            <p class="lead text-muted">
+                {% if query %}Articles trouvés pour "{{ query }}"{% endif %}
+                {% if query and category %} et {% endif %}
+                {% if category %}catégorie "{{ category }}"{% endif %}
+            </p>
+            <a href="{{ path('post_index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Voir tous les articles
+            </a>
+        {% else %}
+            <h1 class="display-4 fw-bold mb-3">Découvrez nos articles</h1>
+            <p class="lead text-muted">Partagez vos idées et découvrez celles des autres</p>
+        {% endif %}
+    </div>
+    
+    <!-- Filtres -->
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <div class="card border-0">
+                <div class="card-body">
+                    <form method="get" action="{{ path('post_index') }}" class="row g-3">
+                        <div class="col-md-6">
+                            <input type="text" name="q" class="form-control" placeholder="Rechercher un article..." value="{{ query }}">
+                        </div>
+                        <div class="col-md-4">
+                            <select name="category" class="form-control">
+                                <option value="">Toutes les catégories</option>
+                                <option value="programmation" {{ category == 'programmation' ? 'selected' : '' }}>Programmation</option>
+                                <option value="voyage" {{ category == 'voyage' ? 'selected' : '' }}>Voyage</option>
+                                <option value="musique" {{ category == 'musique' ? 'selected' : '' }}>Musique</option>
+                                <option value="technologie" {{ category == 'technologie' ? 'selected' : '' }}>Technologie</option>
+                                <option value="lifestyle" {{ category == 'lifestyle' ? 'selected' : '' }}>Lifestyle</option>
+                                <option value="sport" {{ category == 'sport' ? 'selected' : '' }}>Sport</option>
+                                <option value="cuisine" {{ category == 'cuisine' ? 'selected' : '' }}>Cuisine</option>
+                                <option value="autre" {{ category == 'autre' ? 'selected' : '' }}>Autre</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if is_granted('ROLE_USER') %}
+        <div class="text-center mb-5">
+            <a class="btn btn-primary btn-lg px-4 py-3" href="{{ path('post_new') }}">
+                <i class="fas fa-plus me-2"></i>Créer un nouvel article
+            </a>
+        </div>
+    {% endif %}
+    
+    {% if posts is empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">Aucun article pour le moment</h3>
+            <p class="text-muted">Soyez le premier à partager quelque chose !</p>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for post in posts %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0">
+                        {% if post.imageFilename %}
+                            <img src="{{ asset('uploads/posts/' ~ post.imageFilename) }}" class="card-img-top" alt="Illustration de l'article" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-newspaper fa-3x text-white opacity-50"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ post.author.avatarFilename ? asset('uploads/avatars/' ~ post.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (post.author.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
+                                <div>
+                                    <a href="{{ path('post_by_author', {id: post.author.id}) }}" class="fw-bold text-primary text-decoration-none">{{ post.author.email }}</a>
+                                    <small class="text-muted d-block">{{ post.createdAt|date('d/m/Y') }}</small>
+                                </div>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">{{ post.title }}</h5>
+                            <p class="card-text text-muted">{{ post.content|slice(0, 100) }}...</p>
+                            
+                            {% if post.category %}
+                                <div class="mb-3">
+                                    <span class="badge bg-secondary">{{ post.category }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if post.tags %}
+                                <div class="mb-3">
+                                    {% for tag in post.tagsArray %}
+                                        <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-heart text-danger"></i>
+                                    <small class="text-muted">{{ post.likesCount }} likes</small>
+                                </div>
+                                <small class="text-muted">{{ post.comments|length }} commentaires</small>
+                            </div>
+                            
+                            <a href="{{ path('post_show', {id: post.id}) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Lire la suite
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+

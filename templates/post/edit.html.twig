@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier l'article{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                            <i class="fas fa-edit fa-2x text-white"></i>
+                        </div>
+                        <h1 class="h3 fw-bold">Modifier l'article</h1>
+                        <p class="text-muted">Apportez des modifications à votre publication</p>
+                    </div>
+
+                    {% if post.imageFilename %}
+                        <div class="text-center mb-4">
+                            <img src="{{ asset('uploads/posts/' ~ post.imageFilename) }}" alt="Image actuelle" class="img-fluid rounded" style="max-height: 200px;">
+                            <p class="text-muted mt-2">Image actuelle</p>
+                        </div>
+                    {% endif %}
+
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        {% if form is defined and form.vars.submitted and not form.vars.valid %}
+                            <div class="alert alert-danger">Veuillez corriger les erreurs ci-dessous.</div>
+                        {% endif %}
+                        <div class="mb-4">
+                            {{ form_label(form.title) }}
+                            {{ form_widget(form.title) }}
+                            {{ form_errors(form.title) }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.imageFile) }}
+                            <div class="input-group">
+                                {{ form_widget(form.imageFile) }}
+                                <span class="input-group-text bg-light border-start-0">
+                                    <i class="fas fa-image text-muted"></i>
+                                </span>
+                            </div>
+                            {{ form_errors(form.imageFile) }}
+                            <small class="text-muted">Formats: JPG/PNG/GIF/WEBP, max 2 Mo, min 200x200</small>
+                            <br/><small class="text-muted">Laissez vide pour conserver l'image actuelle</small>
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.content) }}
+                            {{ form_widget(form.content) }}
+                            {{ form_errors(form.content) }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.category) }}
+                            {{ form_widget(form.category) }}
+                            {{ form_errors(form.category) }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.tags) }}
+                            {{ form_widget(form.tags) }}
+                            {{ form_errors(form.tags) }}
+                            <div class="form-text">{{ form_help(form.tags) }}</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>Mettre à jour
+                            </button>
+                            <a href="{{ path('post_show', {id: post.id}) }}" class="btn btn-outline-secondary btn-lg px-5">
+                                <i class="fas fa-arrow-left me-2"></i>Retour
+                            </a>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,160 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord administrateur{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4 admin-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header section">
+        <h1 class="h3 mb-0 card-title-strong">
+            <i class="fas fa-gauge-high me-2"></i>Tableau de bord administrateur
+            <div class="subtitle">Vue d’ensemble</div>
+        </h1>
+        <div class="btn-group toolbar">
+            <a href="{{ path('admin_users') }}" class="btn btn-outline-primary">
+                <i class="fas fa-users me-1"></i>Utilisateurs
+            </a>
+            <a href="{{ path('admin_comments') }}" class="btn btn-outline-warning">
+                <i class="fas fa-comments me-1"></i>Commentaires
+                {% if stats.pending_comments > 0 %}<span class="notif-dot" title="Commentaires en attente"></span>{% endif %}
+            </a>
+            <a href="{{ path('admin_reports') }}" class="btn btn-outline-danger">
+                <i class="fas fa-flag me-1"></i>Signalements
+                {% if stats.pending_reports > 0 %}<span class="notif-dot" title="Signalements en attente"></span>{% endif %}
+            </a>
+            <a href="{{ path('admin_statistics') }}" class="btn btn-outline-info">
+                <i class="fas fa-chart-bar me-1"></i>Statistiques
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row g-4 mb-5 kpi-row">
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-lg mb-2 text-primary"></i>
+                    <h3 class="mb-0">{{ stats.total_users }}</h3>
+                    <small>Utilisateurs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-newspaper fa-lg mb-2 text-success"></i>
+                    <h3 class="mb-0">{{ stats.total_posts }}</h3>
+                    <small>Articles</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-comments fa-lg mb-2 text-info"></i>
+                    <h3 class="mb-0">{{ stats.total_comments }}</h3>
+                    <small>Commentaires</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-hourglass-half fa-lg mb-2 text-warning"></i>
+                    <h3 class="mb-0">{{ stats.pending_comments }}</h3>
+                    <small>En attente</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-flag fa-lg mb-2 text-danger"></i>
+                    <h3 class="mb-0">{{ stats.pending_reports }}</h3>
+                    <small>Signalements</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2">
+            <div class="card kpi">
+                <div class="card-body text-center">
+                    <i class="fas fa-ban fa-lg mb-2 text-dark"></i>
+                    <h3 class="mb-0">{{ stats.blocked_users }}</h3>
+                    <small>Bloqués</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="row g-4 section">
+        <!-- Articles populaires -->
+        <div class="col-lg-6">
+            <div class="card section-card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0 card-title-strong">
+                        <i class="fas fa-fire me-2"></i>Articles les plus populaires
+                    </h5>
+                    <span class="badge badge-soft">Top {{ popular_posts|length }}</span>
+                </div>
+                <div class="card-body">
+                    {% if popular_posts is empty %}
+                        <p class="text-muted mb-0">Aucun article pour le moment.</p>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for post in popular_posts %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3">
+                                    <div>
+                                        <h6 class="mb-1 card-title-strong">{{ post.title }}</h6>
+                                        <small class="text-muted">par {{ post.author.email }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge badge-soft">{{ post.viewsCount }} vues</span>
+                                        <br>
+                                        <small class="text-muted">{{ post.likesCount }} likes</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Signalements récents -->
+        <div class="col-lg-6">
+            <div class="card section-card">
+                <div class="card-header">
+                    <h5 class="mb-0 card-title-strong">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Signalements récents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_reports is empty %}
+                        <p class="text-muted mb-0">Aucun signalement en attente.</p>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for report in recent_reports %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1 card-title-strong">Signalement #{{ report.id }}</h6>
+                                            <p class="mb-1 small">{{ report.comment.content|slice(0, 100) }}...</p>
+                                            <small class="text-muted">
+                                                Signalé par {{ report.reporter.email }} le {{ report.createdAt|date('d/m/Y H:i') }}
+                                            </small>
+                                        </div>
+                                        <a href="{{ path('admin_reports') }}" class="btn btn-sm btn-outline-warning">
+                                            Voir
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

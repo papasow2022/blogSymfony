@@ -1,0 +1,84 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Articles de {{ author.email }}{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <div class="d-flex align-items-center justify-content-center mb-4">
+            <img src="{{ author.avatarFilename ? asset('uploads/avatars/' ~ author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (author.email|url_encode) ~ '&size=128' }}" alt="Avatar" class="rounded-circle me-4" width="80" height="80">
+            <div class="text-start">
+                <h1 class="display-5 fw-bold mb-2">{{ author.email }}</h1>
+                {% if author.bio %}
+                    <p class="lead text-muted">{{ author.bio }}</p>
+                {% endif %}
+                <span class="badge bg-primary px-3 py-2 rounded-pill">{{ posts|length }} article(s)</span>
+            </div>
+        </div>
+        <a href="{{ path('post_index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Voir tous les articles
+        </a>
+    </div>
+    
+    {% if posts is empty %}
+        <div class="text-center py-5">
+            <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+            <h3 class="text-muted">Aucun article publié</h3>
+            <p class="text-muted">Cet utilisateur n'a pas encore publié d'articles.</p>
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for post in posts %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0">
+                        {% if post.imageFilename %}
+                            <img src="{{ asset('uploads/posts/' ~ post.imageFilename) }}" class="card-img-top" alt="Illustration de l'article" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top d-flex align-items-center justify-content-center" style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <i class="fas fa-newspaper fa-3x text-white opacity-50"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ post.author.avatarFilename ? asset('uploads/avatars/' ~ post.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (post.author.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
+                                <div>
+                                    <div class="fw-bold text-primary">{{ post.author.email }}</div>
+                                    <small class="text-muted">{{ post.createdAt|date('d/m/Y') }}</small>
+                                </div>
+                            </div>
+                            <h5 class="card-title fw-bold mb-3">{{ post.title }}</h5>
+                            <p class="card-text text-muted">{{ post.content|slice(0, 100) }}...</p>
+                            
+                            {% if post.category %}
+                                <div class="mb-3">
+                                    <span class="badge bg-secondary">{{ post.category }}</span>
+                                </div>
+                            {% endif %}
+                            
+                            {% if post.tags %}
+                                <div class="mb-3">
+                                    {% for tag in post.tagsArray %}
+                                        <span class="badge bg-light text-dark me-1">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-heart text-danger"></i>
+                                    <small class="text-muted">{{ post.likesCount }} likes</small>
+                                </div>
+                                <small class="text-muted">{{ post.comments|length }} commentaires</small>
+                            </div>
+                            
+                            <a href="{{ path('post_show', {id: post.id}) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Lire la suite
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

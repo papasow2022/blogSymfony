@@ -1,0 +1,140 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des signalements{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4 admin-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header section">
+        <h1 class="h3 mb-0 card-title-strong">
+            <i class="fas fa-flag me-2"></i>Gestion des signalements
+            <div class="subtitle">Examiner et résoudre</div>
+        </h1>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Retour au tableau de bord
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% if pending_reports is not empty %}
+        <div class="card section">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0 card-title-strong">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Signalements en attente
+                    <span class="badge bg-light text-dark ms-2">{{ pending_reports|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for report in pending_reports %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h6 class="mb-1 card-title-strong">Signalement #{{ report.id }}</h6>
+                                <small class="text-muted">Signalé par {{ report.reporter.email }} le {{ report.createdAt|date('d/m/Y H:i') }}</small>
+                            </div>
+                            <form method="post" action="{{ path('admin_report_resolve', {id: report.id}) }}" style="display: inline;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('resolve_report_' ~ report.id) }}">
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check me-1"></i>Marquer comme résolu
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="card bg-light">
+                                    <div class="card-header">
+                                        <strong>Commentaire signalé</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <img src="{{ report.comment.author.avatarFilename ? asset('uploads/avatars/' ~ report.comment.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (report.comment.author.email|url_encode) ~ '&size=32' }}" 
+                                                 alt="Avatar" class="rounded-circle me-2" width="32" height="32">
+                                            <div>
+                                                <strong>{{ report.comment.author.email }}</strong>
+                                                <div class="small text-muted">sur "{{ report.comment.post.title }}" — {{ report.comment.createdAt|date('d/m/Y H:i') }}</div>
+                                            </div>
+                                        </div>
+                                        <div class="comment-content">
+                                            {{ report.comment.content|nl2br }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-header"><strong>Raison du signalement</strong></div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ report.reason ?: 'Aucune raison spécifiée' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="separator"></div>
+    {% endif %}
+
+    <div class="card section">
+        <div class="card-header">
+            <h5 class="mb-0 card-title-strong">
+                <i class="fas fa-check-circle me-2"></i>Signalements résolus
+                <span class="badge badge-soft ms-2">{{ resolved_reports|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if resolved_reports is empty %}
+                <p class="text-muted">Aucun signalement résolu.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Signalé par</th>
+                                <th>Commentaire</th>
+                                <th>Raison</th>
+                                <th>Date</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in resolved_reports %}
+                                <tr>
+                                    <td>{{ report.id }}</td>
+                                    <td>{{ report.reporter.email }}</td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 260px;" title="{{ report.comment.content }}">
+                                            {{ report.comment.content|slice(0, 64) }}...
+                                        </div>
+                                        <small class="text-muted">par {{ report.comment.author.email }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 220px;" title="{{ report.reason }}">
+                                            {{ report.reason ?: 'Aucune raison' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ report.createdAt|date('d/m/Y H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-soft-success">Résolu</span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

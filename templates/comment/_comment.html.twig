@@ -1,0 +1,52 @@
+{% set indent = level * 20 %}
+{% if comment.isApproved %}
+<div class="border rounded p-3 mb-2" style="margin-left: {{ indent }}px;">
+    <div class="small d-flex align-items-center gap-2 text-muted mb-2">
+        <img src="{{ comment.author.avatarFilename ? asset('uploads/avatars/' ~ comment.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (comment.author.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle" width="24" height="24">
+        <span>{{ comment.author.email }} — {{ comment.createdAt|date('d/m/Y H:i') }}</span>
+    </div>
+    <div class="mb-2">{{ comment.content|nl2br }}</div>
+    
+    <div class="d-flex gap-2">
+        {% if is_granted('ROLE_USER') %}
+            <button class="btn btn-sm btn-outline-secondary" onclick="replyToComment({{ comment.id }})">
+                Répondre
+            </button>
+        {% endif %}
+        
+        {% if is_granted('ROLE_USER') and app.user != comment.author %}
+            <a href="{{ path('comment_report', {id: comment.id}) }}" class="btn btn-sm btn-outline-warning">
+                Signaler
+            </a>
+        {% endif %}
+        
+        {% if is_granted('ROLE_USER') and app.user == comment.author %}
+            <form method="post" action="{{ path('comment_delete', {id: comment.id}) }}" style="display: inline;" onsubmit="return confirm('Supprimer ce commentaire ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ comment.id) }}">
+                <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% for reply in comment.replies %}
+    {% if reply.isApproved %}
+        {% include 'comment/_comment.html.twig' with {'comment': reply, 'level': level + 1} %}
+    {% endif %}
+{% endfor %}
+{% endif %}
+
+<script>
+function replyToComment(commentId) {
+    const replyForm = document.querySelector('form[name="comment_form"]');
+    const contentField = replyForm.querySelector('textarea[name="comment[content]"]');
+    const parentIdField = document.createElement('input');
+    parentIdField.type = 'hidden';
+    parentIdField.name = 'parent_id';
+    parentIdField.value = commentId;
+    
+    replyForm.appendChild(parentIdField);
+    contentField.focus();
+    contentField.value = '@' + commentId + ' ';
+}
+</script>

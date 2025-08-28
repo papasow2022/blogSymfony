@@ -5,13 +5,506 @@
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+            <style>
+                :root {
+                    --primary-color: #2563eb; /* bleu principal */
+                    --secondary-color: #3b82f6; /* variante légère */
+                    --accent-color: #2563eb;
+                    --success-color: #16a34a;
+                    --warning-color: #f59e0b;
+                    --danger-color: #dc2626;
+                    --dark-color: #1f2937;
+                    --light-color: #f8fafc;
+                    --border-color: #e5e7eb;
+                    --text-primary: #111827;
+                    --text-secondary: #6b7280;
+                    --radius-sm: 10px;
+                    --radius-md: 14px;
+                    --radius-lg: 18px;
+                    --gap-sm: .5rem;
+                    --gap-md: 1rem;
+                    --gap-lg: 1.5rem;
+                    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                    --shadow-md: 0 6px 12px -6px rgb(0 0 0 / 0.12);
+                    --shadow-lg: 0 12px 20px -10px rgb(0 0 0 / 0.14);
+                }
+                
+                body {
+                    background: #f3f4f6; /* neutre clair */
+                    min-height: 100vh;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                }
+                
+                .navbar {
+                    background: #ffffff !important;
+                    backdrop-filter: blur(10px);
+                    border: none !important;
+                    box-shadow: var(--shadow-lg);
+                }
+                
+                .navbar-brand {
+                    color: var(--primary-color);
+                    font-size: 1.5rem;
+                    font-weight: 800;
+                }
+                
+                .btn {
+                    border-radius: var(--radius-sm);
+                    font-weight: 600;
+                    padding: 0.5rem 1.25rem;
+                    transition: all 0.3s ease;
+                    border: none;
+                    box-shadow: var(--shadow-sm);
+                }
+                
+                .btn:hover {
+                    transform: translateY(-2px);
+                    box-shadow: var(--shadow-md);
+                }
+                
+                .btn-primary {
+                    background: var(--primary-color);
+                }
+                
+                .btn-success {
+                    background: var(--success-color);
+                }
+                
+                .btn-outline-primary {
+                    border: 2px solid var(--primary-color);
+                    color: var(--primary-color);
+                    background: transparent;
+                }
+                
+                .btn-outline-primary:hover {
+                    background: var(--primary-color);
+                    color: white;
+                }
+
+                /* Harmoniser actions admin/écriture dans le header */
+                .btn-danger.btn-sm[href*='admin'] { background: var(--primary-color); border: none; }
+                .btn-danger.btn-sm[href*='admin']:hover { background: var(--secondary-color); }
+                .btn-primary.btn-sm[href*='post_new'] { background: var(--primary-color); }
+                
+                .container {
+                    background: rgba(255, 255, 255, 0.95);
+                    backdrop-filter: blur(10px);
+                    border-radius: var(--radius-lg);
+                    box-shadow: var(--shadow-lg);
+                    margin-top: 2rem;
+                    margin-bottom: 2rem;
+                    padding: 2rem;
+                }
+                
+                .card {
+                    border: 1px solid rgba(0,0,0,.06);
+                    border-radius: var(--radius-md);
+                    box-shadow: var(--shadow-sm);
+                    transition: transform .18s ease, box-shadow .18s ease;
+                    background: #fff;
+                }
+                .card:hover {
+                    transform: translateY(-3px);
+                    box-shadow: var(--shadow-md);
+                }
+                
+                .form-control {
+                    border-radius: 12px;
+                    border: 2px solid var(--border-color);
+                    padding: 0.75rem 1rem;
+                    transition: all 0.3s ease;
+                }
+                
+                .form-control:focus {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+                }
+                
+                .list-group-item {
+                    border: none;
+                    border-radius: var(--radius-sm) !important;
+                    margin-bottom: .5rem;
+                    box-shadow: var(--shadow-sm);
+                    transition: background-color .2s ease;
+                }
+                
+                .list-group-item:hover { background-color: rgba(0,0,0,.02); }
+                
+                .alert {
+                    border-radius: var(--radius-sm);
+                    border: none;
+                    box-shadow: var(--shadow-sm);
+                }
+                
+                .rounded-circle { box-shadow: var(--shadow-sm); }
+                
+                h1, h2, h3, h4, h5, h6 {
+                    color: var(--text-primary);
+                    font-weight: 700;
+                }
+                
+                .text-muted {
+                    color: var(--text-secondary) !important;
+                }
+                
+                /* Dark mode styles */
+                [data-theme="dark"] {
+                    --primary-color: #8b5cf6;
+                    --secondary-color: #a855f7;
+                    --accent-color: #06b6d4;
+                    --success-color: #10b981;
+                    --warning-color: #f59e0b;
+                    --danger-color: #ef4444;
+                    --dark-color: #1f2937;
+                    --light-color: #111827;
+                    --border-color: #374151;
+                    --text-primary: #f9fafb;
+                    --text-secondary: #9ca3af;
+                    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+                    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+                    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+                }
+                
+                [data-theme="dark"] body {
+                    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+                }
+                
+                [data-theme="dark"] .navbar {
+                    background: rgba(17, 24, 39, 0.95) !important;
+                }
+                
+                [data-theme="dark"] .container {
+                    background: rgba(17, 24, 39, 0.95);
+                }
+                
+                [data-theme="dark"] .card {
+                    background: rgba(31, 41, 55, 0.8);
+                    border: 1px solid var(--border-color);
+                }
+                
+                [data-theme="dark"] .form-control {
+                    background: rgba(31, 41, 55, 0.8);
+                    border-color: var(--border-color);
+                    color: var(--text-primary);
+                }
+                
+                [data-theme="dark"] .form-control:focus {
+                    background: rgba(31, 41, 55, 0.9);
+                }
+                
+                [data-theme="dark"] .dropdown-menu {
+                    background: rgba(31, 41, 55, 0.95);
+                    border: 1px solid var(--border-color);
+                }
+                
+                [data-theme="dark"] .dropdown-item {
+                    color: var(--text-primary);
+                }
+                
+                [data-theme="dark"] .dropdown-item:hover {
+                    background: rgba(55, 65, 81, 0.8);
+                }
+                
+                [data-theme="dark"] .btn-outline-primary {
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+                
+                [data-theme="dark"] .btn-outline-primary:hover {
+                    background: var(--primary-color);
+                    color: white;
+                }
+                
+                [data-theme="dark"] .btn-outline-secondary {
+                    border-color: var(--text-secondary);
+                    color: var(--text-secondary);
+                }
+                
+                [data-theme="dark"] .btn-outline-secondary:hover {
+                    background: var(--text-secondary);
+                    color: var(--dark-color);
+                }
+                
+                [data-theme="dark"] .alert {
+                    background: rgba(31, 41, 55, 0.8);
+                    border: 1px solid var(--border-color);
+                }
+                
+                [data-theme="dark"] .list-group-item {
+                    background: rgba(31, 41, 55, 0.8);
+                    border: 1px solid var(--border-color);
+                }
+                
+                [data-theme="dark"] .input-group-text {
+                    background: rgba(55, 65, 81, 0.8);
+                    border-color: var(--border-color);
+                    color: var(--text-secondary);
+                }
+            </style>
+            <style>
+                /* Admin UI refinements */
+                .admin-dashboard .page-header {
+                    background: rgba(255,255,255,0.95);
+                    border: 1px solid rgba(0,0,0,.08);
+                    border-radius: var(--radius-md);
+                    padding: 1rem 1.25rem;
+                    box-shadow: var(--shadow-md);
+                }
+
+                .admin-dashboard .toolbar .btn {
+                    border-radius: 10px;
+                    padding: .5rem 1rem;
+                    background: white;
+                    border: 1px solid var(--border-color);
+                }
+                .admin-dashboard .toolbar {
+                    display: inline-flex;
+                    gap: .5rem; /* léger espace entre les éléments */
+                }
+
+                /* Responsive rules */
+                @media (max-width: 576px) {
+                    .admin-dashboard .page-header { padding: .75rem 1rem; }
+                    .admin-dashboard .toolbar { display: flex; flex-direction: column; width: 100%; gap: .5rem; }
+                    .admin-dashboard .toolbar .btn { width: 100%; justify-content: center; }
+                    .admin-dashboard .kpi-row { overflow-x: auto; white-space: nowrap; padding-bottom: .5rem; margin-bottom: 1rem; }
+                    .admin-dashboard .kpi-row .col-sm-6, 
+                    .admin-dashboard .kpi-row .col-md-4, 
+                    .admin-dashboard .kpi-row .col-lg-2 { display: inline-block; float: none; white-space: normal; }
+                    .admin-dashboard .kpi-row .kpi { min-width: 170px; margin-right: .75rem; }
+                    .admin-dashboard .section-card .card-body { padding: .75rem; }
+                    .admin-dashboard .list-group-item { padding: .5rem .75rem; }
+                }
+
+                .admin-dashboard .kpi.card {
+                    border-radius: var(--radius-md);
+                    border: 1px solid rgba(0,0,0,.06);
+                    background: #ffffff;
+                    color: var(--text-primary);
+                }
+
+                [data-theme="dark"] .admin-dashboard .kpi.card {
+                    background: rgba(31,41,55,.96);
+                    border-color: var(--border-color);
+                    color: var(--text-primary);
+                }
+
+                .admin-dashboard .kpi .card-body {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: .25rem;
+                }
+
+                .admin-dashboard .kpi .card-body i { opacity: 1; }
+                .admin-dashboard .kpi .card-body h3 { font-weight: 800; letter-spacing: .5px; }
+                .admin-dashboard .kpi .card-body small { opacity: .95; font-weight: 600; }
+
+                .admin-dashboard .section-card .card-header {
+                    background: #ffffff;
+                    border-bottom: 1px solid rgba(0,0,0,.06);
+                }
+
+                .admin-dashboard .list-group-item { border-radius: 0 !important; box-shadow: none; background:#fff; }
+
+                /* Uniform spacing utilities */
+                .stack-md > * + * { margin-top: var(--gap-md); }
+                .stack-lg > * + * { margin-top: var(--gap-lg); }
+                .section { margin-top: var(--gap-lg); margin-bottom: var(--gap-md); }
+                .card + .card { margin-top: var(--gap-md); }
+                .card .card-body > * + * { margin-top: .75rem; }
+
+                /* Tables */
+                .admin-dashboard table thead th {
+                    font-weight: 700;
+                    color: var(--text-secondary);
+                    text-transform: uppercase;
+                    letter-spacing: .04em;
+                    font-size: .75rem;
+                    border-bottom: 1px solid var(--border-color) !important;
+                }
+
+                .admin-dashboard table tbody td { vertical-align: middle; }
+
+                /* Soft badges */
+                .badge-soft {
+                    background: rgba(99,102,241,.18);
+                    color: var(--primary-color);
+                    border: 1px solid rgba(99,102,241,.35);
+                    font-weight: 600;
+                }
+
+                .badge-soft-danger {
+                    background: rgba(239,68,68,.18);
+                    color: var(--danger-color);
+                    border: 1px solid rgba(239,68,68,.35);
+                }
+
+                .badge-soft-success {
+                    background: rgba(16,185,129,.18);
+                    color: var(--success-color);
+                    border: 1px solid rgba(16,185,129,.35);
+                }
+                /* Headings hierarchy */
+                h1.h2, .h1, h1 { font-size: 1.75rem; }
+                h2.h4, .h2, h2 { font-size: 1.25rem; }
+                .subtitle { color: var(--text-secondary); font-weight: 600; letter-spacing: .02em; }
+
+                /* Section spacing */
+                .section { margin-top: 1.75rem; margin-bottom: 1.25rem; }
+                .section + .section { margin-top: 2rem; }
+
+                /* Subtle separators */
+                .separator { height: 1px; background: var(--border-color); opacity: .8; margin: 1rem 0; }
+
+                /* Card titles */
+                .card-title-strong { font-weight: 800; letter-spacing: .02em; }
+                .card-subtitle { color: var(--text-secondary); font-weight: 600; }
+                /* Notification dot */
+                .notif-dot {
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--danger-color);
+                    margin-left: .4rem;
+                    vertical-align: middle;
+                    box-shadow: 0 0 0 2px #fff;
+                }
+                [data-theme="dark"] .notif-dot { box-shadow: 0 0 0 2px var(--dark-color); }
+            </style>
         {% endblock %}
 
         {% block javascripts %}
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Theme toggle functionality
+                document.addEventListener('DOMContentLoaded', function() {
+                    const themeToggle = document.getElementById('theme-toggle');
+                    const lightIcon = document.getElementById('light-icon');
+                    const darkIcon = document.getElementById('dark-icon');
+                    
+                    // Check for saved theme preference or default to 'light'
+                    const currentTheme = localStorage.getItem('theme') || 'light';
+                    document.documentElement.setAttribute('data-theme', currentTheme);
+                    updateIcon(currentTheme);
+                    
+                    themeToggle.addEventListener('click', function() {
+                        const currentTheme = document.documentElement.getAttribute('data-theme');
+                        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                        
+                        document.documentElement.setAttribute('data-theme', newTheme);
+                        localStorage.setItem('theme', newTheme);
+                        updateIcon(newTheme);
+                    });
+                    
+                    function updateIcon(theme) {
+                        if (theme === 'dark') {
+                            lightIcon.style.display = 'none';
+                            darkIcon.style.display = 'inline-block';
+                        } else {
+                            lightIcon.style.display = 'inline-block';
+                            darkIcon.style.display = 'none';
+                        }
+                    }
+                });
+            </script>
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
     </head>
     <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
+            <div class="container">
+                <a class="navbar-brand fw-bold text-primary" href="{{ path('home') }}">
+                    <i class="fas fa-blog me-2"></i>Mon Blog
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link fw-medium" href="{{ path('post_index') }}">
+                                <i class="fas fa-newspaper me-1"></i>Articles
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <form class="d-flex me-3" method="get" action="{{ path('post_index') }}">
+                        <div class="input-group" style="width: 300px;">
+                            <input class="form-control" type="search" name="q" placeholder="Rechercher un article..." value="{{ app.request.query.get('q') }}">
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <ul class="navbar-nav ms-auto align-items-center">
+                        <li class="nav-item me-3">
+                            <button class="btn btn-outline-primary btn-sm" id="theme-toggle" title="Changer de thème">
+                                <i class="fas fa-sun" id="light-icon"></i>
+                                <i class="fas fa-moon" id="dark-icon" style="display: none;"></i>
+                            </button>
+                        </li>
+                        {% if app.user %}
+                            <li class="nav-item dropdown me-2">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="{{ app.user.avatarFilename ? asset('uploads/avatars/' ~ app.user.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (app.user.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle me-2" width="32" height="32">
+                                    <span class="text-muted small">{{ app.user.email }}</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('profile_edit') }}">
+                                            <i class="fas fa-user me-2 text-primary"></i>Profil
+                                        </a>
+                                    </li>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                        <li>
+                                            <a class="dropdown-item" href="{{ path('admin_dashboard') }}">
+                                                <i class="fas fa-cog me-2 text-danger"></i>Administration
+                                            </a>
+                                        </li>
+                                    {% endif %}
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('post_new') }}">
+                                            <i class="fas fa-pen-to-square me-2 text-success"></i>Écrire
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('app_logout') }}">
+                                            <i class="fas fa-right-from-bracket me-2 text-muted"></i>Déconnexion
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li class="nav-item me-2">
+                                <a class="btn btn-outline-primary btn-sm" href="{{ path('app_login') }}">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Connexion
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-success btn-sm" href="{{ path('app_register') }}">
+                                    <i class="fas fa-user-plus me-1"></i>Inscription
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        {% for type, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        
         {% block body %}{% endblock %}
     </body>
 </html>

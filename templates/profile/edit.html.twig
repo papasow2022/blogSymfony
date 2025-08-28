@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold mb-3">Mon profil</h1>
+        <p class="lead text-muted">Gérez vos informations personnelles</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <div class="position-relative d-inline-block">
+                            <img src="{{ user.avatarFilename ? asset('uploads/avatars/' ~ user.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (user.email|url_encode) ~ '&size=128' }}" alt="Avatar" class="rounded-circle shadow-lg" width="120" height="120">
+                            <div class="position-absolute bottom-0 end-0 bg-primary rounded-circle p-2">
+                                <i class="fas fa-camera text-white"></i>
+                            </div>
+                        </div>
+                        <h3 class="mt-3 fw-bold">{{ user.email }}</h3>
+                        {% if user.bio %}
+                            <p class="text-muted mt-2">{{ user.bio }}</p>
+                        {% endif %}
+                        <span class="badge bg-primary px-3 py-2 rounded-pill">Membre</span>
+                    </div>
+
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+                        <div class="mb-4">
+                            {{ form_label(form.email) }}
+                            {{ form_widget(form.email) }}
+                            {{ form_errors(form.email) }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.bio) }}
+                            {{ form_widget(form.bio) }}
+                            {{ form_errors(form.bio) }}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form_label(form.avatarFile) }}
+                            <div class="input-group">
+                                {{ form_widget(form.avatarFile) }}
+                                <span class="input-group-text bg-light border-start-0">
+                                    <i class="fas fa-upload text-muted"></i>
+                                </span>
+                            </div>
+                            {{ form_errors(form.avatarFile) }}
+                            <small class="text-muted">Formats acceptés : JPEG, PNG, GIF (max 1 Mo)</small>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>Mettre à jour
+                            </button>
+                        </div>
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

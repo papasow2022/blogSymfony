@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Signaler un commentaire{% endblock %}
+
+{% block body %}
+<div class="container py-5" style="max-width: 720px;">
+    <h1 class="mb-4">Signaler un commentaire</h1>
+    
+    <div class="alert alert-warning">
+        <strong>Commentaire signalé :</strong>
+        <div class="border rounded p-3 mt-2">
+            <div class="small d-flex align-items-center gap-2 text-muted">
+                <img src="{{ comment.author.avatarFilename ? asset('uploads/avatars/' ~ comment.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (comment.author.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle" width="24" height="24">
+                <span>{{ comment.author.email }} — {{ comment.createdAt|date('d/m/Y H:i') }}</span>
+            </div>
+            <div>{{ comment.content|nl2br }}</div>
+        </div>
+    </div>
+
+    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+        <div class="mb-3">
+            {{ form_label(form.reason) }}
+            {{ form_widget(form.reason) }}
+            {{ form_errors(form.reason) }}
+        </div>
+        <button class="btn btn-warning">Signaler le commentaire</button>
+        <a href="{{ path('post_show', {id: comment.post.id}) }}" class="btn btn-link">Annuler</a>
+    {{ form_end(form) }}
+</div>
+{% endblock %}

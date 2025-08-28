@@ -1,0 +1,153 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modération des commentaires{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4 admin-dashboard">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header section">
+        <h1 class="h3 mb-0 card-title-strong">
+            <i class="fas fa-comments me-2"></i>Modération des commentaires
+            <div class="subtitle">Approuver ou supprimer</div>
+        </h1>
+        <a href="{{ path('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Retour au tableau de bord
+        </a>
+    </div>
+
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
+
+    {% if pending_comments is not empty %}
+        <div class="card section">
+            <div class="card-header bg-warning text-white">
+                <h5 class="mb-0 card-title-strong">
+                    <i class="fas fa-clock me-2"></i>Commentaires en attente d'approbation
+                    <span class="badge bg-light text-dark ms-2">{{ pending_comments|length }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for comment in pending_comments %}
+                    <div class="border rounded p-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ comment.author.avatarFilename ? asset('uploads/avatars/' ~ comment.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (comment.author.email|url_encode) ~ '&size=32' }}" 
+                                     alt="Avatar" class="rounded-circle me-2" width="32" height="32">
+                                <div>
+                                    <strong>{{ comment.author.email }}</strong>
+                                    <div class="small text-muted">sur "{{ comment.post.title }}" — {{ comment.createdAt|date('d/m/Y H:i') }}</div>
+                                </div>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <form method="post" action="{{ path('admin_comment_approve', {id: comment.id}) }}" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('approve_comment_' ~ comment.id) }}">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-check me-1"></i>Approuver
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('admin_comment_delete', {id: comment.id}) }}" style="display: inline;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ comment.id) }}">
+                                    <button type="submit" class="btn btn-danger" onclick="return confirm('Supprimer ce commentaire ?')">
+                                        <i class="fas fa-trash me-1"></i>Supprimer
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="comment-content">
+                            {{ comment.content|nl2br }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="separator"></div>
+    {% endif %}
+
+    <div class="card section">
+        <div class="card-header">
+            <h5 class="mb-0 card-title-strong">
+                <i class="fas fa-list me-2"></i>Tous les commentaires
+                <span class="badge badge-soft ms-2">{{ all_comments|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if all_comments is empty %}
+                <p class="text-muted">Aucun commentaire trouvé.</p>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Auteur</th>
+                                <th>Article</th>
+                                <th>Contenu</th>
+                                <th>Statut</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for comment in all_comments %}
+                                <tr>
+                                    <td>{{ comment.id }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ comment.author.avatarFilename ? asset('uploads/avatars/' ~ comment.author.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (comment.author.email|url_encode) ~ '&size=24' }}" 
+                                                 alt="Avatar" class="rounded-circle me-2" width="24" height="24">
+                                            {{ comment.author.email }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('post_show', {id: comment.post.id}) }}" class="text-decoration-none">
+                                            {{ comment.post.title|slice(0, 30) }}...
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="text-truncate" style="max-width: 240px;" title="{{ comment.content }}">
+                                            {{ comment.content|slice(0, 60) }}...
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if comment.isApproved %}
+                                            <span class="badge badge-soft-success">Approuvé</span>
+                                        {% else %}
+                                            <span class="badge badge-soft-danger">En attente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ comment.createdAt|date('d/m/Y H:i') }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            {% if not comment.isApproved %}
+                                                <form method="post" action="{{ path('admin_comment_approve', {id: comment.id}) }}" style="display: inline;">
+                                                    <input type="hidden" name="_token" value="{{ csrf_token('approve_comment_' ~ comment.id) }}">
+                                                    <button type="submit" class="btn btn-success" title="Approuver">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            
+                                            <form method="post" action="{{ path('admin_comment_delete', {id: comment.id}) }}" style="display: inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('delete_comment_' ~ comment.id) }}">
+                                                <button type="submit" class="btn btn-danger" title="Supprimer" onclick="return confirm('Supprimer ce commentaire ?')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
