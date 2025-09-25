@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Admin;
 
 use App\Entity\User;
 use App\Entity\Comment;
@@ -161,7 +161,7 @@ class AdminController extends AbstractController
     ): Response {
         $popularPosts = $postRepository->findBy([], ['viewsCount' => 'DESC'], 10);
         $mostLikedPosts = $postRepository->findBy([], ['likesCount' => 'DESC'], 10);
-        $activeUsers = $userRepository->findBy([], [], 10); // À améliorer avec un vrai tri par activité
+        $activeUsers = $userRepository->findBy([], [], 10);
 
         return $this->render('admin/statistics.html.twig', [
             'popular_posts' => $popularPosts,
@@ -173,7 +173,6 @@ class AdminController extends AbstractController
     #[Route('/create-admin', name: 'admin_create_admin')]
     public function createAdmin(EntityManagerInterface $em, UserPasswordHasherInterface $passwordHasher): Response
     {
-        // Vérifier si un admin existe déjà
         $existingAdmin = $em->getRepository(User::class)->findOneBy(['roles' => ['ROLE_ADMIN']]);
         
         if ($existingAdmin) {
@@ -181,7 +180,6 @@ class AdminController extends AbstractController
             return $this->redirectToRoute('admin_dashboard');
         }
 
-        // Créer un utilisateur administrateur
         $admin = new User();
         $admin->setEmail('admin@example.com');
         $admin->setRoles(['ROLE_ADMIN']);
@@ -194,4 +192,4 @@ class AdminController extends AbstractController
         $this->addFlash('success', 'Utilisateur administrateur créé avec succès ! Email: admin@example.com, Mot de passe: admin123');
         return $this->redirectToRoute('admin_dashboard');
     }
-} 
+}

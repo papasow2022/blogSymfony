@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Front;
 
 use App\Form\ProfileFormType;
 use Doctrine\ORM\EntityManagerInterface;
@@ -47,11 +47,9 @@ class ProfileController extends AbstractController
             return $this->redirectToRoute('profile_edit');
         }
 
-        return $this->render('profile/edit.html.twig', [
+        return $this->render('front/profile/edit.html.twig', [
             'form' => $form->createView(),
             'user' => $user,
         ]);
     }
 }
-
-

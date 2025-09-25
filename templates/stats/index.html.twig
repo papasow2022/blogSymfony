@@ -1,0 +1,133 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques du Blog{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <h1 class="mb-4">📊 Statistiques du Blog</h1>
+
+    <!-- Statistiques générales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">📝 Articles</h5>
+                    <h2 class="text-primary">{{ stats.total_posts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">👀 Vues</h5>
+                    <h2 class="text-success">{{ stats.total_views|number_format }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">❤️ Likes</h5>
+                    <h2 class="text-danger">{{ stats.total_likes|number_format }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h5 class="card-title">📈 Moy. Vues/Article</h5>
+                    <h2 class="text-info">{{ stats.average_views_per_post }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Articles populaires -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔥 Articles les plus populaires</h5>
+                </div>
+                <div class="card-body">
+                    {% if popularPosts %}
+                        {% for post in popularPosts %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <a href="{{ path('post_show', {'id': post.id}) }}" class="text-decoration-none">
+                                        {{ post.title }}
+                                    </a>
+                                    <small class="text-muted d-block">{{ post.createdAt|date('d/m/Y') }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">{{ post.viewsCount }} vues</span>
+                                    <span class="badge bg-danger">{{ post.likesCount }} likes</span>
+                                </div>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Aucun article trouvé.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Articles les plus likés -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>❤️ Articles les plus likés</h5>
+                </div>
+                <div class="card-body">
+                    {% if mostLikedPosts %}
+                        {% for post in mostLikedPosts %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>
+                                    <a href="{{ path('post_show', {'id': post.id}) }}" class="text-decoration-none">
+                                        {{ post.title }}
+                                    </a>
+                                    <small class="text-muted d-block">{{ post.createdAt|date('d/m/Y') }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-primary">{{ post.viewsCount }} vues</span>
+                                    <span class="badge bg-danger">{{ post.likesCount }} likes</span>
+                                </div>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">Aucun article trouvé.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Endpoint -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔗 API Endpoint</h5>
+                </div>
+                <div class="card-body">
+                    <p>Accédez aux statistiques via l'API :</p>
+                    <code>{{ url('stats_api') }}</code>
+                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="copyToClipboard('{{ url('stats_api') }}')">
+                        Copier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('URL copiée dans le presse-papiers !');
+    });
+}
+</script>
+{% endblock %}

@@ -111,8 +111,8 @@
                 </div>
             </div>
             
-            {% if is_granted('ROLE_USER') and app.user == post.author %}
-                <div class="d-flex gap-2">
+            {% if is_granted('DELETE', post) %}
+                <div class="d-flex flex-column flex-sm-row gap-2">
                     <a class="btn btn-primary" href="{{ path('post_edit', {id: post.id}) }}">
                         <i class="fas fa-edit me-2"></i>Modifier
                     </a>

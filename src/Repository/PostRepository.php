@@ -49,4 +49,54 @@ class PostRepository extends ServiceEntityRepository
                  ->getQuery()
                  ->getResult();
     }
+
+    /**
+     * Récupère le nombre total de vues de tous les articles
+     */
+    public function getTotalViews(): int
+    {
+        $result = $this->createQueryBuilder('p')
+            ->select('SUM(p.viewsCount)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
+    /**
+     * Récupère le nombre total de likes de tous les articles
+     */
+    public function getTotalLikes(): int
+    {
+        $result = $this->createQueryBuilder('p')
+            ->select('SUM(p.likesCount)')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $result;
+    }
+
+    /**
+     * Récupère les articles les plus populaires
+     */
+    public function findMostPopular(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('p')
+            ->orderBy('p.viewsCount', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Récupère les articles les plus likés
+     */
+    public function findMostLiked(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('p')
+            ->orderBy('p.likesCount', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

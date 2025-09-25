@@ -1,9 +1,9 @@
-controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
-    type: attribute
+# Grouped routes by layer
+front:
+    resource: routes/front.yaml
 
-home:
-    path: /
-    controller: App\Controller\HomeController::index
+admin:
+    resource: routes/admin.yaml
+
+api:
+    resource: routes/api.yaml

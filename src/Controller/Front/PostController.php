@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Front;
 
 use App\Entity\Post;
 use App\Entity\Comment;
@@ -11,6 +11,8 @@ use App\Form\CommentReportType;
 use App\Repository\PostRepository;
 use App\Repository\CommentReportRepository;
 use App\Repository\PostLikeRepository;
+use App\Service\CacheService;
+use App\Service\ImageOptimizerService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,18 +28,18 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 class PostController extends AbstractController
 {
     #[Route('/', name: 'post_index', methods: ['GET'])]
-    public function index(Request $request, PostRepository $postRepository): Response
+    public function index(Request $request, CacheService $cacheService): Response
     {
         $query = $request->query->get('q');
         $category = $request->query->get('category');
         
         if ($query || $category) {
-            $posts = $postRepository->search($query, $category);
+            $posts = $cacheService->getSearchResults($query, $category);
         } else {
-            $posts = $postRepository->findBy([], ['createdAt' => 'DESC']);
+            $posts = $cacheService->getLatestPosts(20);
         }
         
-        return $this->render('post/index.html.twig', [
+        return $this->render('front/post/index.html.twig', [
             'posts' => $posts,
             'query' => $query,
             'category' => $category
@@ -46,7 +48,7 @@ class PostController extends AbstractController
 
     #[Route('/new', name: 'post_new', methods: ['GET','POST'])]
     #[IsGranted('ROLE_USER')]
-    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $params): Response
+    public function new(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $params, ImageOptimizerService $imageOptimizer, CacheService $cacheService): Response
     {
         $post = new Post();
         $form = $this->createForm(PostType::class, $post);
@@ -54,43 +56,62 @@ class PostController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $imageFile = $form->get('imageFile')->getData();
+            $optimized = true; // Par défaut, pas d'image ou optimisation réussie
 
             if ($imageFile) {
                 $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+                $uploadPath = $params->get('kernel.project_dir').'/public/uploads/posts/'.$newFilename;
 
                 try {
                     $imageFile->move(
                         $params->get('kernel.project_dir').'/public/uploads/posts',
                         $newFilename
                     );
-                    $post->setImageFilename($newFilename);
+
+                    $optimized = $imageOptimizer->resizeAndOptimize($imageFile, $uploadPath, 1200, 800);
+                    
+                    if ($optimized) {
+                        $post->setImageFilename($newFilename);
+                    } else {
+                        $post->setImageFilename($newFilename);
+                    }
                 } catch (FileException $e) {
                     $this->addFlash('error', 'Erreur lors de l\'upload de l\'image : ' . $e->getMessage());
                 }
             }
 
             $post->setAuthor($this->getUser());
-            $post->setCreatedAt(new \DateTimeImmutable());
+            $post->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Conakry')));
             $em->persist($post);
             $em->flush();
 
-            $this->addFlash('success', 'Votre article a été créé avec succès !');
+            // Invalider le cache après la sauvegarde
+            $cacheService->invalidateAllPostCaches();
+
+            // Message de succès conditionnel selon l'optimisation d'image
+            if ($imageFile && !$optimized) {
+                $this->addFlash('success', 'Votre article a été créé avec succès ! (Image uploadée mais optimisation échouée)');
+            } else {
+                $this->addFlash('success', 'Votre article a été créé avec succès !');
+            }
             return $this->redirectToRoute('post_index');
         }
 
-        return $this->render('post/new.html.twig', [
+        return $this->render('front/post/new.html.twig', [
             'form' => $form->createView(),
         ]);
     }
 
     #[Route('/{id}', name: 'post_show', methods: ['GET','POST'])]
-    public function show(Post $post, Request $request, EntityManagerInterface $em, CommentReportRepository $reportRepo, PaginatorInterface $paginator): Response
+    public function show(Post $post, Request $request, EntityManagerInterface $em, CommentReportRepository $reportRepo, PaginatorInterface $paginator, CacheService $cacheService): Response
     {
-        // Incrémenter le compteur de vues
         $post->incrementViews();
         $em->flush();
+
+        $cacheService->invalidatePostCache($post->getId());
+        $cacheService->invalidateStatsCache();
 
         $comment = new Comment();
         $form = $this->createForm(CommentType::class, $comment);
@@ -107,8 +128,8 @@ class PostController extends AbstractController
             
             $comment->setAuthor($this->getUser());
             $comment->setPost($post);
-            $comment->setCreatedAt(new \DateTimeImmutable());
-            $comment->setIsApproved(false); // En attente d'approbation par défaut
+            $comment->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Conakry')));
+            $comment->setIsApproved(false);
             $em->persist($comment);
             $em->flush();
             
@@ -116,7 +137,6 @@ class PostController extends AbstractController
             return $this->redirectToRoute('post_show', ['id' => $post->getId()]);
         }
 
-        // Récupérer les commentaires principaux (sans parent) avec leurs réponses
         $commentsQuery = $em->getRepository(Comment::class)->createQueryBuilder('c')
             ->where('c.post = :post')
             ->andWhere('c.parent IS NULL')
@@ -129,10 +149,10 @@ class PostController extends AbstractController
         $comments = $paginator->paginate(
             $commentsQuery,
             $request->query->getInt('page', 1),
-            10 // 10 commentaires par page
+            10
         );
 
-        return $this->render('post/show.html.twig', [
+        return $this->render('front/post/show.html.twig', [
             'post' => $post,
             'comments' => $comments,
             'commentForm' => $form->createView(),
@@ -141,7 +161,7 @@ class PostController extends AbstractController
 
     #[Route('/{id}/edit', name: 'post_edit', methods: ['GET','POST'])]
     #[IsGranted('ROLE_USER')]
-    public function edit(Post $post, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $params): Response
+    public function edit(Post $post, Request $request, EntityManagerInterface $em, SluggerInterface $slugger, ParameterBagInterface $params, ImageOptimizerService $imageOptimizer, CacheService $cacheService): Response
     {
         $this->denyAccessUnlessGranted('EDIT', $post, 'Vous ne pouvez pas éditer cet article.');
 
@@ -154,13 +174,23 @@ class PostController extends AbstractController
                 $originalFilename = pathinfo($imageFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$imageFile->guessExtension();
+                $uploadPath = $params->get('kernel.project_dir').'/public/uploads/posts/'.$newFilename;
 
                 try {
                     $imageFile->move(
                         $params->get('kernel.project_dir').'/public/uploads/posts',
                         $newFilename
                     );
-                    $post->setImageFilename($newFilename);
+
+                    $optimized = $imageOptimizer->resizeAndOptimize($imageFile, $uploadPath, 1200, 800);
+                    
+                    if ($optimized) {
+                        $post->setImageFilename($newFilename);
+                        $this->addFlash('success', 'Image optimisée et mise à jour avec succès !');
+                    } else {
+                        $post->setImageFilename($newFilename);
+                        $this->addFlash('warning', 'Image mise à jour mais optimisation échouée.');
+                    }
                 } catch (FileException $e) {
                     $this->addFlash('error', 'Erreur lors de l\'upload de l\'image : ' . $e->getMessage());
                 }
@@ -168,25 +198,43 @@ class PostController extends AbstractController
 
             $post->setUpdatedAt(new \DateTimeImmutable());
             $em->flush();
+
+            $cacheService->invalidatePostCache($post->getId());
+            $cacheService->invalidateAllPostCaches();
             
             $this->addFlash('success', 'Votre article a été modifié avec succès !');
             return $this->redirectToRoute('post_index');
         }
 
-        return $this->render('post/edit.html.twig', [
+        return $this->render('front/post/edit.html.twig', [
             'form' => $form->createView(),
             'post' => $post,
         ]);
     }
 
-    #[Route('/{id}', name: 'post_delete', methods: ['POST'])]
+    #[Route('/{id}/delete', name: 'post_delete', methods: ['POST'])]
     #[IsGranted('ROLE_USER')]
-    public function delete(Post $post, Request $request, EntityManagerInterface $em): Response
+    public function delete(Request $request, EntityManagerInterface $em, CacheService $cacheService, PostRepository $postRepository): Response
     {
+        $id = $request->attributes->get('id');
+        $post = $postRepository->find($id);
+        
+        if (!$post) {
+            $this->addFlash('error', 'L\'article demandé n\'existe pas.');
+            return $this->redirectToRoute('post_index');
+        }
+        
         $this->denyAccessUnlessGranted('DELETE', $post, 'Vous ne pouvez pas supprimer cet article.');
         if ($this->isCsrfTokenValid('delete_post_'.$post->getId(), (string) $request->request->get('_token'))) {
+            // Sauvegarder l'ID avant la suppression
+            $postId = $post->getId();
+            
             $em->remove($post);
             $em->flush();
+
+            // Invalider le cache avec l'ID sauvegardé
+            $cacheService->invalidatePostCache($postId);
+            $cacheService->invalidateAllPostCaches();
             
             $this->addFlash('success', 'L\'article a été supprimé avec succès !');
         }
@@ -197,7 +245,6 @@ class PostController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function deleteComment(Comment $comment, Request $request, EntityManagerInterface $em): Response
     {
-        // Vérifier que l'utilisateur est l'auteur du commentaire
         if ($this->getUser() !== $comment->getAuthor()) {
             throw $this->createAccessDeniedException('Vous ne pouvez pas supprimer ce commentaire.');
         }
@@ -218,7 +265,6 @@ class PostController extends AbstractController
     {
         $user = $this->getUser();
         
-        // Vérifier si l'utilisateur a déjà signalé ce commentaire
         $existingReport = $reportRepo->findByCommentAndReporter($comment, $user);
         if ($existingReport) {
             $this->addFlash('warning', 'Vous avez déjà signalé ce commentaire.');
@@ -232,7 +278,7 @@ class PostController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $report->setReporter($user);
             $report->setComment($comment);
-            $report->setCreatedAt(new \DateTimeImmutable());
+            $report->setCreatedAt(new \DateTimeImmutable('now', new \DateTimeZone('Africa/Conakry')));
             $em->persist($report);
             $em->flush();
 
@@ -240,7 +286,7 @@ class PostController extends AbstractController
             return $this->redirectToRoute('post_show', ['id' => $comment->getPost()->getId()]);
         }
 
-        return $this->render('comment/report.html.twig', [
+        return $this->render('front/comment/report.html.twig', [
             'comment' => $comment,
             'form' => $form->createView(),
         ]);
@@ -252,16 +298,13 @@ class PostController extends AbstractController
     {
         $user = $this->getUser();
         
-        // Vérifier si l'utilisateur a déjà liké cet article
         $existingLike = $likeRepo->findByPostAndUser($post, $user);
         
         if ($existingLike) {
-            // Unlike
             $em->remove($existingLike);
             $post->setLikesCount($post->getLikesCount() - 1);
             $message = 'Like retiré';
         } else {
-            // Like
             $like = new \App\Entity\PostLike();
             $like->setUser($user);
             $like->setPost($post);
@@ -289,11 +332,9 @@ class PostController extends AbstractController
     {
         $posts = $postRepository->findBy(['author' => $author], ['createdAt' => 'DESC']);
         
-        return $this->render('post/by_author.html.twig', [
+        return $this->render('front/post/by_author.html.twig', [
             'author' => $author,
             'posts' => $posts
         ]);
     }
 }
-
-

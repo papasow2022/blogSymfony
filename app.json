@@ -1,0 +1,25 @@
+{
+  "name": "Mon Blog Symfony",
+  "description": "Un blog moderne construit avec Symfony",
+  "repository": "https://github.com/votre-username/votre-blog",
+  "logo": "https://symfony.com/images/logos/opengraph/symfony_black_03.png",
+  "keywords": ["php", "symfony", "blog", "mysql"],
+  "addons": [
+    "cleardb:ignite"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/php"
+    }
+  ],
+  "env": {
+    "SYMFONY_ENV": {
+      "description": "Environment for Symfony",
+      "value": "prod"
+    },
+    "APP_SECRET": {
+      "description": "Secret key for Symfony",
+      "generator": "secret"
+    }
+  }
+}

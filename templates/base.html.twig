@@ -1,7 +1,9 @@
+{% from 'layout/_nav.html.twig' import nav %}
 <!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
@@ -42,6 +44,27 @@
                     backdrop-filter: blur(10px);
                     border: none !important;
                     box-shadow: var(--shadow-lg);
+                    position: relative;
+                    z-index: 1000;
+                }
+                
+                /* Menu déroulant avec z-index élevé */
+                .dropdown-menu {
+                    z-index: 1050 !important;
+                    position: absolute !important;
+                }
+                
+                .dropdown {
+                    position: relative;
+                }
+                /* Neutraliser le style .container global à l'intérieur du header */
+                .navbar .container {
+                    background: transparent;
+                    box-shadow: none;
+                    border-radius: 0;
+                    margin: 0;
+                    padding-top: .5rem;
+                    padding-bottom: .5rem;
                 }
                 
                 .navbar-brand {
@@ -149,6 +172,84 @@
                     color: var(--text-secondary) !important;
                 }
                 
+                /* Responsive design */
+                @media (max-width: 768px) {
+                    .container {
+                        padding: 1rem;
+                        margin-top: 1rem;
+                        margin-bottom: 1rem;
+                    }
+                    
+                    .card-body {
+                        padding: 1rem;
+                    }
+                    
+                    .btn {
+                        padding: 0.4rem 0.8rem;
+                        font-size: 0.9rem;
+                    }
+                    
+                    .display-4, .display-5 {
+                        font-size: 1.8rem;
+                    }
+                    
+                    .h1, h1 { font-size: 1.5rem; }
+                    .h2, h2 { font-size: 1.3rem; }
+                    .h3, h3 { font-size: 1.2rem; }
+                }
+                
+                @media (max-width: 576px) {
+                    .container {
+                        padding: 0.5rem;
+                        margin-top: 0.5rem;
+                        margin-bottom: 0.5rem;
+                    }
+                    
+                    .card-body {
+                        padding: 0.75rem;
+                    }
+                    
+                    .btn {
+                        padding: 0.3rem 0.6rem;
+                        font-size: 0.8rem;
+                    }
+                    
+                    .display-4, .display-5 {
+                        font-size: 1.5rem;
+                    }
+                    
+                    .h1, h1 { font-size: 1.3rem; }
+                    .h2, h2 { font-size: 1.1rem; }
+                    .h3, h3 { font-size: 1rem; }
+                    
+                    /* Navbar responsive */
+                    .navbar .input-group { width: 100% !important; }
+                    .navbar form.d-flex { width: 100%; margin: .5rem 0 0 0 !important; }
+                    .header-search-group { white-space: nowrap; }
+                    .header-search-group .form-control,
+                    .header-search-group .btn { height: 40px; line-height: 38px; }
+                    .header-search-group .form-control { border-width: 1px; border-radius: .5rem 0 0 .5rem; }
+                    .header-search-group .btn { border-width: 1px; border-radius: 0 .5rem .5rem 0; }
+                    .header-search-group { overflow: hidden; }
+                    
+                    /* Boutons de navigation responsive */
+                    .navbar .d-flex.flex-column.flex-md-row {
+                        flex-direction: column !important;
+                        gap: 0.5rem;
+                    }
+                    
+                    /* Masquer la recherche sur très petit écran */
+                    .navbar form.d-flex { display: none !important; }
+                }
+                
+                /* Amélioration pour les écrans moyens et plus */
+                @media (min-width: 768px) {
+                    .navbar .d-flex.flex-column.flex-md-row {
+                        flex-direction: row !important;
+                        gap: 0.5rem;
+                    }
+                }
+                
                 /* Dark mode styles */
                 [data-theme="dark"] {
                     --primary-color: #8b5cf6;
@@ -197,6 +298,7 @@
                 [data-theme="dark"] .dropdown-menu {
                     background: rgba(31, 41, 55, 0.95);
                     border: 1px solid var(--border-color);
+                    z-index: 1050 !important;
                 }
                 
                 [data-theme="dark"] .dropdown-item {
@@ -276,6 +378,16 @@
                     .admin-dashboard .kpi-row .kpi { min-width: 170px; margin-right: .75rem; }
                     .admin-dashboard .section-card .card-body { padding: .75rem; }
                     .admin-dashboard .list-group-item { padding: .5rem .75rem; }
+
+                    /* Header search normalization */
+                    .navbar .input-group { width: 100% !important; }
+                    .navbar .input-group .form-control { border-width: 1px; padding: .45rem .65rem; border-radius: .5rem 0 0 .5rem; }
+                    .navbar .input-group .btn { border-width: 1px; padding: .45rem .65rem; border-radius: 0 .5rem .5rem 0; }
+                }
+
+                @media (max-width: 360px) {
+                    /* Option: masquer la recherche sur très petite largeur */
+                    .navbar form.d-flex { display: none !important; }
                 }
 
                 .admin-dashboard .kpi.card {
@@ -389,25 +501,22 @@
                     // Check for saved theme preference or default to 'light'
                     const currentTheme = localStorage.getItem('theme') || 'light';
                     document.documentElement.setAttribute('data-theme', currentTheme);
-                    updateIcon(currentTheme);
+                    if (lightIcon && darkIcon) { updateIcon(currentTheme); }
                     
+                    if (themeToggle) {
                     themeToggle.addEventListener('click', function() {
                         const currentTheme = document.documentElement.getAttribute('data-theme');
                         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-                        
                         document.documentElement.setAttribute('data-theme', newTheme);
                         localStorage.setItem('theme', newTheme);
-                        updateIcon(newTheme);
+                            if (lightIcon && darkIcon) { updateIcon(newTheme); }
                     });
+                    }
                     
                     function updateIcon(theme) {
-                        if (theme === 'dark') {
-                            lightIcon.style.display = 'none';
-                            darkIcon.style.display = 'inline-block';
-                        } else {
-                            lightIcon.style.display = 'inline-block';
-                            darkIcon.style.display = 'none';
-                        }
+                        if (!lightIcon || !darkIcon) return;
+                        if (theme === 'dark') { lightIcon.style.display = 'none'; darkIcon.style.display = 'inline-block'; }
+                        else { lightIcon.style.display = 'inline-block'; darkIcon.style.display = 'none'; }
                     }
                 });
             </script>
@@ -415,95 +524,9 @@
         {% endblock %}
     </head>
     <body>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
-            <div class="container">
-                <a class="navbar-brand fw-bold text-primary" href="{{ path('home') }}">
-                    <i class="fas fa-blog me-2"></i>Mon Blog
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link fw-medium" href="{{ path('post_index') }}">
-                                <i class="fas fa-newspaper me-1"></i>Articles
-                            </a>
-                        </li>
-                    </ul>
-                    
-                    <form class="d-flex me-3" method="get" action="{{ path('post_index') }}">
-                        <div class="input-group" style="width: 300px;">
-                            <input class="form-control" type="search" name="q" placeholder="Rechercher un article..." value="{{ app.request.query.get('q') }}">
-                            <button class="btn btn-outline-primary" type="submit">
-                                <i class="fas fa-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                    <ul class="navbar-nav ms-auto align-items-center">
-                        <li class="nav-item me-3">
-                            <button class="btn btn-outline-primary btn-sm" id="theme-toggle" title="Changer de thème">
-                                <i class="fas fa-sun" id="light-icon"></i>
-                                <i class="fas fa-moon" id="dark-icon" style="display: none;"></i>
-                            </button>
-                        </li>
-                        {% if app.user %}
-                            <li class="nav-item dropdown me-2">
-                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src="{{ app.user.avatarFilename ? asset('uploads/avatars/' ~ app.user.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (app.user.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle me-2" width="32" height="32">
-                                    <span class="text-muted small">{{ app.user.email }}</span>
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                    <li>
-                                        <a class="dropdown-item" href="{{ path('profile_edit') }}">
-                                            <i class="fas fa-user me-2 text-primary"></i>Profil
-                                        </a>
-                                    </li>
-                                    {% if is_granted('ROLE_ADMIN') %}
-                                        <li>
-                                            <a class="dropdown-item" href="{{ path('admin_dashboard') }}">
-                                                <i class="fas fa-cog me-2 text-danger"></i>Administration
-                                            </a>
-                                        </li>
-                                    {% endif %}
-                                    <li>
-                                        <a class="dropdown-item" href="{{ path('post_new') }}">
-                                            <i class="fas fa-pen-to-square me-2 text-success"></i>Écrire
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <a class="dropdown-item" href="{{ path('app_logout') }}">
-                                            <i class="fas fa-right-from-bracket me-2 text-muted"></i>Déconnexion
-                                        </a>
-                                    </li>
-                                </ul>
-                            </li>
-                        {% else %}
-                            <li class="nav-item me-2">
-                                <a class="btn btn-outline-primary btn-sm" href="{{ path('app_login') }}">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Connexion
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-success btn-sm" href="{{ path('app_register') }}">
-                                    <i class="fas fa-user-plus me-1"></i>Inscription
-                                </a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </nav>
+        {{ nav(app) }}
         
-        {% for type, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ type == 'error' ? 'danger' : type }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endfor %}
+        {% include 'layout/_flash.html.twig' %}
         
         {% block body %}{% endblock %}
     </body>

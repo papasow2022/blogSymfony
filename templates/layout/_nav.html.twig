@@ -1,0 +1,56 @@
+{# Navigation partial extracted from base.html.twig #}
+{% macro nav(app) %}
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="{{ path('home') }}">
+            <i class="fas fa-blog me-2"></i>Mon Blog
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link fw-medium" href="{{ path('post_index') }}">
+                        <i class="fas fa-newspaper me-1"></i>Articles
+                    </a>
+                </li>
+            </ul>
+            <form class="d-flex me-3 w-auto" method="get" action="{{ path('post_index') }}">
+                <div class="input-group flex-nowrap header-search-group">
+                    <input class="form-control" type="search" name="q" placeholder="Rechercher un article..." value="{{ app.request.query.get('q') }}">
+                    <button class="btn btn-outline-primary" type="submit">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if app.user %}
+                    <li class="nav-item dropdown me-2">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="{{ app.user.avatarFilename ? asset('uploads/avatars/' ~ app.user.avatarFilename) : 'https://ui-avatars.com/api/?name=' ~ (app.user.email|url_encode) ~ '&size=64' }}" alt="Avatar" class="rounded-circle me-2" width="32" height="32">
+                            <span class="text-muted small">{{ app.user.email }}</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="{{ path('profile_edit') }}"><i class="fas fa-user me-2 text-primary"></i>Profil</a></li>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li><a class="dropdown-item" href="{{ path('admin_dashboard') }}"><i class="fas fa-cog me-2 text-danger"></i>Administration</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ path('post_new') }}"><i class="fas fa-pen-to-square me-2 text-success"></i>Écrire</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ path('app_logout') }}"><i class="fas fa-right-from-bracket me-2 text-muted"></i>Déconnexion</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <div class="d-flex flex-column flex-md-row gap-2">
+                            <a class="btn btn-outline-primary btn-sm" href="{{ path('app_login') }}"><i class="fas fa-sign-in-alt me-1"></i>Connexion</a>
+                            <a class="btn btn-success btn-sm" href="{{ path('app_register') }}"><i class="fas fa-user-plus me-1"></i>Inscription</a>
+                        </div>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endmacro %}

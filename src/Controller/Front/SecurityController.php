@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Front;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,7 +16,7 @@ class SecurityController extends AbstractController
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
 
-        return $this->render('security/login.html.twig', [
+        return $this->render('front/security/login.html.twig', [
             'last_username' => $lastUsername,
             'error' => $error,
         ]);
@@ -28,5 +28,3 @@ class SecurityController extends AbstractController
         // Symfony gère la déconnexion via le firewall
     }
 }
-
-
