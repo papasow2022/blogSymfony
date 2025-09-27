@@ -8,5 +8,10 @@
     "healthcheckTimeout": 300,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
+  },
+  "variables": {
+    "APP_ENV": "prod",
+    "APP_SECRET": "your-secret-key-here-change-in-production",
+    "DATABASE_URL": "mysql://root:password@localhost:3306/blog_symfony?serverVersion=8.0.32&charset=utf8mb4"
   }
 }
